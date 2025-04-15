@@ -2,8 +2,20 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input CreateUserDTO {
+  email: String!
+  first_name: String!
+  last_name: String!
+  password: String!
+}
+
+type Mutation {
+  createUser(data: CreateUserDTO!): User!
+}
+
 type Query {
   getAllUsers: [User!]!
+  getUserById(id: String!): String!
 }
 
 type User {
