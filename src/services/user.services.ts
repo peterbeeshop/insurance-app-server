@@ -2,11 +2,29 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { DatabaseService } from 'src/database/database.services';
+import { LoginUserDTO } from 'src/dto/user/login-user.dto';
 import { CreateUserDTO } from 'src/dto/user/create-user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly databaseService: DatabaseService) {}
+
+  /**
+   * HELPER FUNCTIONS
+   */
+  async validateUser(email: string, password: string) {
+    const user = await this.findUserByEmail(email);
+    if (user) {
+      if (user.password && bcrypt.compareSync(password, user.password)) {
+        //remove the password field from returned data;
+        const { password: userPassword, ...restOfData } = user;
+        return restOfData;
+      } else {
+        return null;
+      }
+    }
+    return null;
+  }
 
   /**
    * QUERIES
@@ -35,6 +53,19 @@ export class UsersService {
     }
   }
 
+  //find a user using their email;
+  async findUserByEmail(email: string) {
+    try {
+      return await this.databaseService.user.findFirst({
+        where: {
+          email,
+        },
+      });
+    } catch (error) {
+      throw new Error('Error retrieving user by email');
+    }
+  }
+
   /**
    * MUTATIONS
    */
@@ -45,6 +76,7 @@ export class UsersService {
         async (prismaTransaction) => {
           const { email, password } = data;
 
+          // Check if email is taken before proceeding
           const isEmailTaken = await prismaTransaction.user.findUnique({
             where: { email },
             select: {
@@ -73,6 +105,21 @@ export class UsersService {
       throw new Error(
         'An error occured while creating new user, please try again.',
       );
+    }
+  }
+
+  async login(data: LoginUserDTO) {
+    try {
+      const { email, password } = data;
+      const user = await this.validateUser(email, password);
+
+      if (!user) {
+        throw new Error('Invalid login credentials. Try again!');
+      }
+
+      return user;
+    } catch (error) {
+      throw new Error('An error occured while trying to login. Try again ');
     }
   }
 }
