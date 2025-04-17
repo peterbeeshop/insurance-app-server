@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  // output   = "../src/database/prisma-client"
 }
 
 datasource db {
@@ -8,10 +9,53 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+//Enums
+enum UserType {
+  user
+  admin
+}
+
+enum ClaimType {
+  theft
+  accident
+  medical
+  other
+}
+
+enum ClaimStatusType {
+  pending
+  approved
+  denied
+}
+
+//Models
 model User {
-  id                       String        @id @default(uuid()) @db.Uuid
-  email                    String        @unique
-  first_name               String 
-  last_name                String
-  password                 String
+  id         String @id @default(uuid()) @db.Uuid
+  email      String @unique
+  first_name String
+  last_name  String
+  password   String
+
+  //Defaults to creating a normal user if not specified
+  user_type UserType @default(user)
+
+  //relationships
+  claims Claim[]
+}
+
+model Claim {
+  id             String          @id @default(uuid()) @db.Uuid
+  userId         String          @db.Uuid
+  user           User            @relation(fields: [userId], references: [id])
+  type           ClaimType
+  description    String
+  contact_number String
+  image          String? //supporting evidence
+  status         ClaimStatusType @default(pending)
+
+  //Composite index incase we want to query by status and userId
+  @@unique([userId, status], name: "get_users_claim_status")
+
+  //Quickly query claims based off the user's id
+  @@index([userId])
 }

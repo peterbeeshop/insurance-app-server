@@ -2,6 +2,23 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Claim {
+  contact_number: String!
+  description: String!
+  id: String!
+  image: String
+  status: String!
+  type: String!
+}
+
+input CreateClaimDTO {
+  contact_number: String!
+  description: String!
+  image: String
+  type: String!
+  userId: String!
+}
+
 input CreateUserDTO {
   email: String!
   first_name: String!
@@ -10,12 +27,14 @@ input CreateUserDTO {
 }
 
 type Mutation {
+  createClaim(data: CreateClaimDTO!): User!
   createUser(data: CreateUserDTO!): User!
 }
 
 type Query {
   getAllUsers: [User!]!
   getUserById(id: String!): String!
+  getUsersClaims(id: String!): [Claim!]!
 }
 
 type User {
